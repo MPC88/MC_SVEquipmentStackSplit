@@ -9,7 +9,9 @@ Function
 - Stacks of active equipment (mainly thinking drones and tractor beams) of the same rarity can now be split and assigned separate hotkeys.  
 - Adds a new button to the hangar screen in stations.  
 
-Note this button isn't "intelligent".  It is always enabled, but you should get error messages rather than full on crashes if you try to use it on a non-activated equipment, weapon or something else.  
+Note the button isn't "intelligent".  It is always enabled, but you should get error messages rather than full on crashes if you try to use it on a non-activated equipment, weapon or something else.  
+
+Note I have no idea how fleet ships might deal with this.  Likely they will just turn both stacks on.  
   
 Install  
 =======  
