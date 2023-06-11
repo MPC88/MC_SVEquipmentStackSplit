@@ -14,7 +14,7 @@ namespace MC_SVEquipmentStackSplit
         // Plugin
 		public const string pluginGuid = "mc.starvalor.equipmentstacksplit";
 		public const string pluginName = "SV Equipment Stack Split";
-		public const string pluginVersion = "1.0.0";
+		public const string pluginVersion = "1.0.1";
 
         // Mod
         private const int hangerPanelCode = 3;
@@ -76,58 +76,67 @@ namespace MC_SVEquipmentStackSplit
         [HarmonyPatch(typeof(ShipInfo), nameof(ShipInfo.SetItemKey))]
         [HarmonyPrefix]
         private static bool ShipInfoSetItemKey_Pre(KeyCode key)
-        {   
-            if ((int)AccessTools.Field(typeof(ShipInfo), "selItemType").GetValue(shipInfo) ==
-                (int)SVUtil.SVUtil.GlobalItemType.equipment)
+        {
+            try
             {
-                int selItemIndex = (int)AccessTools.Field(typeof(ShipInfo), "selItemIndex").GetValue(shipInfo);
-                int selSlotIndex = (int)AccessTools.Field(typeof(ShipInfo), "selSlotIndex").GetValue(shipInfo);
-
-                int equipmentID = ss.shipData.equipments[selItemIndex].equipmentID;
-                int rarity = ss.shipData.equipments[selItemIndex].rarity;
-                int qnt = ss.shipData.equipments[selItemIndex].qnt;
-                ss.shipData.equipments[selItemIndex].buttonCode = key;
-
-                // Which item stack instance?
-                int stackInstance = -1;
-                for(int i = 0; i < ss.shipData.equipments.Count; i++)
+                if ((int)AccessTools.Field(typeof(ShipInfo), "selItemType").GetValue(shipInfo) ==
+                    (int)SVUtil.SVUtil.GlobalItemType.equipment)
                 {
-                    InstalledEquipment ie = ss.shipData.equipments[i];                    
-                    if (ie.equipmentID == equipmentID && ie.rarity == rarity && ie.qnt == qnt)
-                    {
-                        stackInstance++;
-                        if (i == selItemIndex)
-                            break;
-                    }   
-                }
+                    int selItemIndex = (int)AccessTools.Field(typeof(ShipInfo), "selItemIndex").GetValue(shipInfo);
+                    int selSlotIndex = (int)AccessTools.Field(typeof(ShipInfo), "selSlotIndex").GetValue(shipInfo);
 
-                // If we didn't find a stack, let the game handle it as normal
-                if (stackInstance < 0)
-                    return true;
+                    int equipmentID = ss.shipData.equipments[selItemIndex].equipmentID;
+                    int rarity = ss.shipData.equipments[selItemIndex].rarity;
+                    int qnt = ss.shipData.equipments[selItemIndex].qnt;
+                    ss.shipData.equipments[selItemIndex].buttonCode = key;
 
-                // Set key for approriate active equipment stack
-                if (ss.activeEquips != null)
-                {
-                    int aeStack = 0;
-                    for (int i = 0; i < ss.activeEquips.Count; i++)
+                    // Which item stack instance?
+                    int stackInstance = -1;
+                    for (int i = 0; i < ss.shipData.equipments.Count; i++)
                     {
-                        if (ss.activeEquips[i].id == equipmentID && ss.activeEquips[i].rarity == rarity && ss.activeEquips[i].qnt == qnt)
+                        InstalledEquipment ie = ss.shipData.equipments[i];
+                        if (ie.equipmentID == equipmentID && ie.rarity == rarity && ie.qnt == qnt)
                         {
-                            if (aeStack == stackInstance)
-                            {
-                                ss.activeEquips[i].key = key;
+                            stackInstance++;
+                            if (i == selItemIndex)
                                 break;
-                            }
-                            else
-                                aeStack++;
                         }
                     }
-                }
-                ((Transform)AccessTools.Field(typeof(ShipInfo), "itemPanel").GetValue(shipInfo)).GetChild(selSlotIndex).transform.GetChild(0).Find("ButtonName").GetComponent<Text>().text = PChar.ModifyKey(key.ToString());                
-                return false;
-            }
 
-            return true;
+                    // If we didn't find a stack, let the game handle it as normal
+                    if (stackInstance < 0)
+                        return true;
+
+                    // Set key for approriate active equipment stack
+                    if (ss.activeEquips != null)
+                    {
+                        int aeStack = 0;
+
+                        for (int i = 0; i < ss.activeEquips.Count; i++)
+                        {
+                            if (ss.activeEquips[i].id == equipmentID && ss.activeEquips[i].rarity == rarity && ss.activeEquips[i].qnt == qnt)
+                            {
+                                if (aeStack == stackInstance)
+                                {
+                                    ss.activeEquips[i].key = key;
+                                    break;
+                                }
+                                else
+                                    aeStack++;
+                            }
+                        }
+                    }
+
+                    ((Transform)AccessTools.Field(typeof(ShipInfo), "itemPanel").GetValue(shipInfo)).GetChild(selSlotIndex).transform.GetChild(0).Find("ButtonName").GetComponent<Text>().text = PChar.ModifyKey(key.ToString());
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                return true;
+            }
         }
 
         private static void CreateUI(Inventory inventory)
